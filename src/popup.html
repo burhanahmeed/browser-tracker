@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chrome Usage Tracker</title>
+    <link rel="stylesheet" href="popup.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+</head>
+<body>
+    <div class="app">
+        <aside class="sidebar">
+            <div class="brand">Usage Tracker</div>
+            <nav class="nav">
+                <button class="nav-item active" data-tab="today">Today</button>
+                <button class="nav-item" data-tab="week">This Week</button>
+                <button class="nav-item" data-tab="sites">Top Sites</button>
+                <button class="nav-item" data-tab="pomodoro">Pomodoro</button>
+                <button class="nav-item" data-tab="todo">To‑Do</button>
+                
+            </nav>
+        </aside>
+
+        <main class="main">
+            <div class="container">
+                <header class="header">
+                    <div class="controls">
+                        <button id="toggleTracking" class="btn btn-toggle" title="Toggle Tracking" data-tooltip="Pause/Resume tracking">
+                            <i class="fa-solid fa-pause"></i>
+                        </button>
+                        <button id="refreshData" class="btn btn-toggle" title="Refresh Data" data-tooltip="Refresh usage data">
+                            <i class="fa-solid fa-rotate"></i>
+                        </button>
+                        <button id="openFullscreen" class="btn btn-toggle" title="Open Fullscreen" data-tooltip="Open fullscreen view">
+                            <i class="fa-solid fa-maximize"></i>
+                        </button>
+                    </div>
+                </header>
+
+                <div class="stats-overview">
+                    <div class="stat-card">
+                        <div class="stat-label">Today</div>
+                        <div class="stat-value" id="todayTime">0h 0m</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Sites</div>
+                        <div class="stat-value" id="sitesCount">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Visits</div>
+                        <div class="stat-value" id="visitsCount">0</div>
+                    </div>
+                </div>
+
+                <div class="tab-content">
+                    <div id="today" class="tab-pane active">
+                        <div class="chart-container">
+                            <canvas id="todayChart"></canvas>
+                        </div>
+                        <div class="sites-list" id="todaySitesList"></div>
+                    </div>
+
+                    <div id="week" class="tab-pane">
+                        <div class="chart-container">
+                            <canvas id="weekChart"></canvas>
+                        </div>
+                        <div class="week-summary" id="weekSummary"></div>
+                    </div>
+
+                    <div id="sites" class="tab-pane">
+                        <div class="sites-container">
+                            <div class="search-box">
+                                <input type="text" id="sitesSearch" placeholder="Search sites..." />
+                            </div>
+                            <div class="sites-list" id="topSitesList"></div>
+                        </div>
+                    </div>
+
+                    <div id="pomodoro" class="tab-pane">
+                        <div class="pomodoro-container">
+                            <div class="pomodoro-display" id="pomodoroDisplay">25:00</div>
+                            <div class="pomodoro-status" id="pomodoroStatus">Work</div>
+                            <div class="pomodoro-controls">
+                                <button id="pomodoroStart" class="btn btn-primary">Start</button>
+                                <button id="pomodoroPause" class="btn btn-secondary">Pause</button>
+                                <button id="pomodoroReset" class="btn btn-danger">Reset</button>
+                            </div>
+                            <div class="pomodoro-settings">
+                                <label class="setting-label">Work (min)
+                                    <input type="number" id="workDuration" min="5" max="60" value="25" />
+                                </label>
+                                <label class="setting-label">Break (min)
+                                    <input type="number" id="breakDuration" min="3" max="30" value="5" />
+                                </label>
+                                <label class="setting-label">Long Break (min)
+                                    <input type="number" id="longBreakDuration" min="10" max="60" value="15" />
+                                </label>
+                                <label class="setting-label">Sessions before long break
+                                    <input type="number" id="sessionsBeforeLong" min="1" max="8" value="4" />
+                                </label>
+                            </div>
+                            <div class="pomodoro-summary">
+                                <div>Completed Sessions: <span id="pomodoroSessions">0</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="todo" class="tab-pane">
+                        <div class="todo-container">
+                            <div class="todo-inputs">
+                                <input type="text" id="todoInput" class="todo-text-input" placeholder="Add a task..." />
+                                <input type="datetime-local" id="todoDue" class="todo-datetime-input" />
+                                <button id="todoAdd" class="btn btn-primary">Add</button>
+                            </div>
+                            <div class="todo-list" id="todoList"></div>
+                            <div class="todo-actions">
+                                <button id="todoClearCompleted" class="btn btn-secondary">Clear Completed</button>
+                                <button id="todoClearAll" class="btn btn-danger">Clear All</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="actions">
+                    <button id="exportData" class="btn btn-secondary">Export Data</button>
+                    <button id="clearData" class="btn btn-danger">Clear Data</button>
+                    
+                </div>
+
+                <div class="privacy-notice">
+                    <p>🔒 All data is stored locally on your device. No data is sent to external servers.</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    
+
+    <script src="popup.js"></script>
+</body>
+</html>

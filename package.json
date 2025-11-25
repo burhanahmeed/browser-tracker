@@ -1,0 +1,57 @@
+{
+  "name": "chrome-usage-tracker",
+  "version": "1.0.0",
+  "description": "A privacy-focused browser extension that tracks and analyzes web usage patterns",
+  "main": "src/background.js",
+  "scripts": {
+    "test": "node tests/unit-tests.js",
+    "test:watch": "nodemon tests/unit-tests.js",
+    "build": "echo 'Build complete - extension ready for loading'",
+    "lint": "echo 'Linting not configured - add ESLint for code quality checks'",
+    "package": "zip -r chrome-usage-tracker.zip manifest.json src/ icons/",
+    "dev": "echo 'Development mode - load extension in browser for testing'",
+    "validate": "node -e \"console.log('Validating extension manifest...'); require('./manifest.json')\""
+  },
+  "keywords": [
+    "browser-extension",
+    "usage-tracker",
+    "productivity",
+    "privacy",
+    "chrome",
+    "firefox",
+    "edge",
+    "web-analytics"
+  ],
+  "author": "Chrome Usage Tracker Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-username/chrome-usage-tracker.git"
+  },
+  "bugs": {
+    "url": "https://github.com/your-username/chrome-usage-tracker/issues"
+  },
+  "homepage": "https://github.com/your-username/chrome-usage-tracker#readme",
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "browserslist": [
+    "chrome >= 88",
+    "firefox >= 78",
+    "edge >= 88"
+  ],
+  "manifest_version": 3,
+  "permissions": [
+    "tabs",
+    "storage",
+    "activeTab",
+    "windows"
+  ],
+  "host_permissions": [
+    "http://*/*",
+    "https://*/*"
+  ]
+}
