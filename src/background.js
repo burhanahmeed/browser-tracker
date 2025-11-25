@@ -432,6 +432,20 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
       });
     }
   }
+  if (alarm && alarm.name && alarm.name.startsWith('task-due-')) {
+    const id = alarm.name.slice('task-due-'.length);
+    const res = await chrome.storage.local.get('tasks');
+    const tasks = res.tasks || [];
+    const task = tasks.find((t) => t.id === id);
+    if (task && chrome.notifications) {
+      chrome.notifications.create(`task-notify-${id}`, {
+        type: 'basic',
+        iconUrl: 'icons/icon128.png',
+        title: 'Task Due',
+        message: task.text || 'Task is due'
+      });
+    }
+  }
 });
 
 function getPomodoroRemaining(state) {
@@ -517,28 +531,51 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
           dueAt: request.dueAt || null
         };
         const next = [t, ...tasks];
-        chrome.storage.local.set({ tasks: next }).then(() => sendResponse({ task: t }));
+        chrome.storage.local.set({ tasks: next }).then(() => {
+          if (t.dueAt && t.dueAt > Date.now()) {
+            chrome.alarms.create(`task-due-${t.id}`, { when: t.dueAt });
+          }
+          sendResponse({ task: t });
+        });
       });
       return true;
     }
     case 'tasks:toggle': {
       chrome.storage.local.get('tasks').then((res) => {
         const tasks = (res.tasks || []).map((t) => t.id === request.id ? { ...t, done: !t.done } : t);
-        chrome.storage.local.set({ tasks }).then(() => sendResponse({ success: true }));
+        const updated = tasks.find((t) => t.id === request.id);
+        chrome.storage.local.set({ tasks }).then(() => {
+          if (updated) {
+            const name = `task-due-${updated.id}`;
+            if (updated.done) {
+              chrome.alarms.clear(name);
+            } else if (updated.dueAt && updated.dueAt > Date.now()) {
+              chrome.alarms.create(name, { when: updated.dueAt });
+            }
+          }
+          sendResponse({ success: true });
+        });
       });
       return true;
     }
     case 'tasks:delete': {
       chrome.storage.local.get('tasks').then((res) => {
         const tasks = (res.tasks || []).filter((t) => t.id !== request.id);
-        chrome.storage.local.set({ tasks }).then(() => sendResponse({ success: true }));
+        chrome.storage.local.set({ tasks }).then(() => {
+          chrome.alarms.clear(`task-due-${request.id}`);
+          sendResponse({ success: true });
+        });
       });
       return true;
     }
     case 'tasks:clearCompleted': {
       chrome.storage.local.get('tasks').then((res) => {
-        const tasks = (res.tasks || []).filter((t) => !t.done);
-        chrome.storage.local.set({ tasks }).then(() => sendResponse({ success: true }));
+        const all = res.tasks || [];
+        const tasks = all.filter((t) => !t.done);
+        chrome.storage.local.set({ tasks }).then(() => {
+          all.forEach((t) => { if (t.done) chrome.alarms.clear(`task-due-${t.id}`); });
+          sendResponse({ success: true });
+        });
       });
       return true;
     }

@@ -47,6 +47,20 @@ class PopupManager {
     if (ta) ta.addEventListener('click', this.todoAdd.bind(this));
     if (tc) tc.addEventListener('click', this.todoClearCompleted.bind(this));
     if (tca) tca.addEventListener('click', this.todoClearAll.bind(this));
+
+    const ti = document.getElementById('todoInput');
+    if (ti) ti.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') this.todoAdd();
+    });
+
+    if (chrome && chrome.storage && chrome.storage.onChanged) {
+      chrome.storage.onChanged.addListener((changes, area) => {
+        if (area === 'local') {
+          if (changes.tasks) this.loadTasks();
+          if (changes.pomodoro) this.loadPomodoroData();
+        }
+      });
+    }
   }
 
   async loadSettings() {
@@ -651,18 +665,24 @@ class PopupManager {
       const container = document.getElementById('todoList');
       if (!container) return;
       container.innerHTML = '';
-      tasks.forEach((t) => {
-        const el = document.createElement('div');
-        el.className = 'todo-item';
-        el.innerHTML = `
-          <label class="todo-check">
-            <input type="checkbox" ${t.done ? 'checked' : ''} data-id="${t.id}" />
-            <span class="todo-text ${t.done ? 'done' : ''}">${this.escapeHtml(t.text)}</span>
-          </label>
-          <button class="btn btn-danger todo-delete" data-id="${t.id}">Delete</button>
-        `;
-        container.appendChild(el);
+      const sorted = [...tasks].sort((a,b) => (b.createdAt||0) - (a.createdAt||0));
+      const groups = this.groupTasksByDate(sorted);
+      const order = ['Today','Yesterday'];
+      order.forEach((key) => {
+        if (groups[key] && groups[key].length) this.renderTaskGroup(container, key, groups[key]);
       });
+      const dateKeys = Object.keys(groups).filter(k => !order.includes(k) && k !== 'Last Month');
+      dateKeys.sort((a,b) => {
+        const pa = a.split('-');
+        const pb = b.split('-');
+        const da = new Date(2000+parseInt(pa[2],10), parseInt(pa[1],10)-1, parseInt(pa[0],10));
+        const db = new Date(2000+parseInt(pb[2],10), parseInt(pb[1],10)-1, parseInt(pb[0],10));
+        return db - da;
+      });
+      dateKeys.forEach((key) => {
+        if (groups[key] && groups[key].length) this.renderTaskGroup(container, key, groups[key]);
+      });
+      if (groups['Last Month'] && groups['Last Month'].length) this.renderTaskGroup(container, 'Last Month', groups['Last Month']);
       container.querySelectorAll('input[type="checkbox"]').forEach(cb => {
         cb.addEventListener('change', async (e) => {
           const id = e.currentTarget.getAttribute('data-id');
@@ -678,6 +698,72 @@ class PopupManager {
         });
       });
     } catch {}
+  }
+
+  groupTasksByDate(tasks) {
+    const groups = {};
+    const now = new Date();
+    const todayY = now.getFullYear();
+    const todayM = now.getMonth();
+    const todayD = now.getDate();
+    const yesterday = new Date(todayY, todayM, todayD - 1);
+    const prevMonthY = todayM === 0 ? todayY - 1 : todayY;
+    const prevMonthM = todayM === 0 ? 11 : todayM - 1;
+    tasks.forEach((t) => {
+      const d = new Date(t.createdAt || Date.now());
+      const y = d.getFullYear();
+      const m = d.getMonth();
+      const day = d.getDate();
+      if (y === todayY && m === todayM && day === todayD) {
+        (groups['Today'] ||= []).push(t);
+        return;
+      }
+      if (y === yesterday.getFullYear() && m === yesterday.getMonth() && day === yesterday.getDate()) {
+        (groups['Yesterday'] ||= []).push(t);
+        return;
+      }
+      if (y === prevMonthY && m === prevMonthM) {
+        (groups['Last Month'] ||= []).push(t);
+        return;
+      }
+      const label = this.formatDayLabel(d);
+      (groups[label] ||= []).push(t);
+    });
+    return groups;
+  }
+
+  formatDayLabel(d) {
+    const dd = String(d.getDate()).padStart(2,'0');
+    const mm = String(d.getMonth()+1).padStart(2,'0');
+    const yy = String(d.getFullYear()).slice(-2);
+    return `${dd}-${mm}-${yy}`;
+  }
+
+  renderTaskGroup(container, title, items) {
+    const groupEl = document.createElement('div');
+    groupEl.className = 'todo-group';
+    const titleEl = document.createElement('div');
+    titleEl.className = 'todo-group-title';
+    titleEl.textContent = title;
+    const itemsEl = document.createElement('div');
+    itemsEl.className = 'todo-group-items';
+    items.forEach((t) => {
+      const el = document.createElement('div');
+      el.className = 'todo-item';
+      const createdStr = t.createdAt ? this.formatDateTime(t.createdAt) : '';
+      el.innerHTML = `
+        <label class="todo-check">
+          <input type="checkbox" ${t.done ? 'checked' : ''} data-id="${t.id}" />
+          <span class="todo-text ${t.done ? 'done' : ''}">${this.escapeHtml(t.text)}</span>
+          ${createdStr ? `<span class="todo-created">${this.escapeHtml(createdStr)}</span>` : ''}
+        </label>
+        <button class="btn btn-danger todo-delete" data-id="${t.id}">Delete</button>
+      `;
+      itemsEl.appendChild(el);
+    });
+    groupEl.appendChild(titleEl);
+    groupEl.appendChild(itemsEl);
+    container.appendChild(groupEl);
   }
 
   async todoAdd() {
@@ -697,6 +783,16 @@ class PopupManager {
   async todoClearAll() {
     await chrome.runtime.sendMessage({ action: 'tasks:clearAll' });
     await this.loadTasks();
+  }
+
+  formatDateTime(ts) {
+    if (!ts) return '';
+    try {
+      const d = new Date(ts);
+      return d.toLocaleString();
+    } catch {
+      return '';
+    }
   }
 
   escapeHtml(s) {

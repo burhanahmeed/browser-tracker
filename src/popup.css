@@ -343,14 +343,10 @@ body {
     flex: 2;
 }
 
-.todo-inputs .todo-datetime-input {
-    flex: 1;
-}
-
 .todo-list {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 12px;
     max-height: 240px;
     overflow-y: auto;
 }
@@ -370,7 +366,7 @@ body {
     gap: 8px;
 }
 
-.todo-due {
+.todo-created {
     font-size: 11px;
     color: var(--muted);
 }
@@ -687,4 +683,15 @@ body {
     --muted: #666;
     --border: #e0e3e7;
     --card-bg: #ffffff;
+}
+.todo-group-title {
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 6px;
+}
+
+.todo-group-items {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
 }
