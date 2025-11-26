@@ -138,6 +138,8 @@ class PopupManager {
       case 'todo':
         this.loadTasks();
         break;
+      case 'about':
+        break;
     }
   }
 
@@ -552,7 +554,7 @@ class PopupManager {
     canvases.forEach(canvas => {
       const parent = canvas.parentElement;
       const width = parent ? parent.clientWidth : canvas.offsetWidth;
-      canvas.width = Math.max(320, width);
+      canvas.width = width;
       canvas.height = 240;
     });
 
@@ -561,7 +563,7 @@ class PopupManager {
       canvases.forEach(canvas => {
         const parent = canvas.parentElement;
         const width = parent ? parent.clientWidth : canvas.offsetWidth;
-        canvas.width = Math.max(320, width);
+        canvas.width = width;
         canvas.height = 240;
       });
       // Re-render charts on resize

@@ -10,13 +10,17 @@
 <body>
     <div class="app">
         <aside class="sidebar">
-            <div class="brand">Usage Tracker</div>
+                <div class="brand">
+                    <img src="browser-tracker-icon.png" class="brand-icon" alt="Icon" />
+                    Usage Tracker
+                </div>
             <nav class="nav">
                 <button class="nav-item active" data-tab="today">Today</button>
                 <button class="nav-item" data-tab="week">This Week</button>
                 <button class="nav-item" data-tab="sites">Top Sites</button>
                 <button class="nav-item" data-tab="pomodoro">Pomodoro</button>
                 <button class="nav-item" data-tab="todo">To‑Do</button>
+                <button class="nav-item" data-tab="about">About</button>
                 
             </nav>
         </aside>
@@ -114,6 +118,19 @@
                             <div class="todo-actions">
                                 <button id="todoClearCompleted" class="btn btn-secondary">Clear Completed</button>
                                 <button id="todoClearAll" class="btn btn-danger">Clear All</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="about" class="tab-pane">
+                        <div class="about-container">
+                            <div class="about-card">
+                                <h3 class="about-title">About</h3>
+                                <p class="about-text">Chrome Usage Tracker with Pomodoro and To‑Do.</p>
+                                <div class="link-list">
+                                    <span>Made by <a class="link-item" href="https://brhn.my.id" target="_blank" rel="noopener noreferrer">brhn.my.id</a></span>
+                                    <span>Open source on <a class="link-item" href="https://github.com/burhanahmeed/browser-tracker" target="_blank" rel="noopener noreferrer">GitHub Repo</a></span>
+                                </div>
                             </div>
                         </div>
                     </div>
