@@ -34,11 +34,9 @@ class PopupManager {
     // Search functionality
     document.getElementById('sitesSearch').addEventListener('input', this.filterSites.bind(this));
 
-    const ps = document.getElementById('pomodoroStart');
-    const pp = document.getElementById('pomodoroPause');
+    const pt = document.getElementById('pomodoroToggle');
     const pr = document.getElementById('pomodoroReset');
-    if (ps) ps.addEventListener('click', this.pomodoroStart.bind(this));
-    if (pp) pp.addEventListener('click', this.pomodoroPause.bind(this));
+    if (pt) pt.addEventListener('click', this.pomodoroToggle.bind(this));
     if (pr) pr.addEventListener('click', this.pomodoroReset.bind(this));
 
     const ta = document.getElementById('todoAdd');
@@ -621,6 +619,14 @@ class PopupManager {
       if (s.isRunning) {
         this.pomodoroTimer = setInterval(() => this.loadPomodoroData(), 1000);
       }
+      const toggleBtn = document.getElementById('pomodoroToggle');
+      if (toggleBtn) {
+        if (s.isRunning) {
+          toggleBtn.innerHTML = 'Pause <i class="fa-solid fa-pause"></i>';
+        } else {
+          toggleBtn.innerHTML = 'Start <i class="fa-solid fa-play"></i>';
+        }
+      }
       const wd = document.getElementById('workDuration');
       const bd = document.getElementById('breakDuration');
       const lbd = document.getElementById('longBreakDuration');
@@ -835,4 +841,15 @@ PopupManager.prototype.openFullscreen = async function() {
   } catch (error) {
     console.error('Error opening fullscreen view:', error);
   }
+};
+PopupManager.prototype.pomodoroToggle = async function() {
+  try {
+    const res = await chrome.runtime.sendMessage({ action: 'pomodoro:get' });
+    const s = res && res.state ? res.state : {};
+    if (s.isRunning) {
+      await this.pomodoroPause();
+    } else {
+      await this.pomodoroStart();
+    }
+  } catch {}
 };

@@ -36,15 +36,13 @@ class UsageTracker {
 
   async initializeExistingTabs() {
     try {
+      if (!chrome || !chrome.tabs || !chrome.tabs.query) return;
       const tabs = await chrome.tabs.query({});
       const activeTab = tabs.find(tab => tab.active);
-      
       if (activeTab && activeTab.url) {
         this.startTrackingTab(activeTab.id, activeTab.url);
       }
-    } catch (error) {
-      console.error('Error initializing existing tabs:', error);
-    }
+    } catch {}
   }
 
   handleTabActivated(activeInfo) {
