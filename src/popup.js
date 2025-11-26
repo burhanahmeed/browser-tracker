@@ -187,7 +187,17 @@ class PopupManager {
 
   async loadWeekData() {
     try {
-      const weekData = await this.getWeekData();
+      const msg = async (payload) => {
+        try {
+          if (chrome && chrome.runtime && typeof chrome.runtime.sendMessage === 'function') {
+            return await chrome.runtime.sendMessage(payload);
+          }
+          return null;
+        } catch (e) {
+          return null;
+        }
+      };
+      const weekData = await this.getWeekData(msg);
       this.renderWeekChart(weekData);
       this.renderWeekSummary(weekData);
     } catch (error) {
@@ -195,7 +205,7 @@ class PopupManager {
     }
   }
 
-  async getWeekData() {
+  async getWeekData(msg) {
     const weekData = [];
     const today = new Date();
     
@@ -204,10 +214,17 @@ class PopupManager {
       date.setDate(date.getDate() - i);
       const dateStr = date.toISOString().split('T')[0];
       
-      const dailyStats = await chrome.runtime.sendMessage({ 
-        action: 'getDailyStats', 
-        date: dateStr 
-      });
+      let dailyStats = {};
+      try {
+        if (msg) {
+          const resp = await msg({ action: 'getDailyStats', date: dateStr });
+          dailyStats = resp || {};
+        } else {
+          dailyStats = await chrome.runtime.sendMessage({ action: 'getDailyStats', date: dateStr });
+        }
+      } catch {
+        dailyStats = {};
+      }
       
       let totalTime = 0;
       if (dailyStats) {
@@ -263,12 +280,18 @@ class PopupManager {
 
   renderWeekChart(weekData) {
     const canvas = document.getElementById('weekChart');
+    if (!canvas) return;
+    const parent = canvas.parentElement;
+    const width = parent ? parent.clientWidth : canvas.offsetWidth;
+    if (!width || width === 0) {
+      requestAnimationFrame(() => this.renderWeekChart(weekData));
+      return;
+    }
+    canvas.width = width;
+    canvas.height = 240;
     const ctx = canvas.getContext('2d');
-    
-    // Prepare data for bar chart
     const labels = weekData.map(d => d.dayName);
     const values = weekData.map(d => d.totalTime);
-    
     const colors = this.generateColors(labels.length);
     this.drawBarChart(ctx, canvas, labels, values, colors);
   }
